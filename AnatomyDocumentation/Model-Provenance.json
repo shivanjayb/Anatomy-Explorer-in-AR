@@ -1,0 +1,51 @@
+[
+  {
+    "name": "MuscularSystem100.fbx",
+    "bytes": 37343180,
+    "gitBlobSha": "2477e1b6caf97d7174762b5eec6cf1c80db64eed",
+    "sha256": "4c19df534d5d84aabbce08604306aa0485b43e8a2483c72a95b569e1dfea2279",
+    "source": "https://github.com/LluisV/Z-Anatomy/blob/6c7f9016bd5899ac8edafd31b9900c151df42ed6/Resources/Models/FBX/MuscularSystem100.fbx"
+  },
+  {
+    "name": "SkeletalSystem100.fbx",
+    "bytes": 41339660,
+    "gitBlobSha": "7c62e45211bf3992bb7239170343e06e2b073865",
+    "sha256": "294a649765cd060a62a4095da52b9c8ef2d97769aa447e196448aa5f7d596dea",
+    "source": "https://github.com/LluisV/Z-Anatomy/blob/6c7f9016bd5899ac8edafd31b9900c151df42ed6/Resources/Models/FBX/SkeletalSystem100.fbx"
+  },
+  {
+    "name": "VisceralSystem100.fbx",
+    "bytes": 18401708,
+    "gitBlobSha": "355770ae46123044c85deca03de3fb880b8f7301",
+    "sha256": "22b301c93327929c9a14ee582d1848b550a950376e221a6d1078c7256bb83d0e",
+    "source": "https://github.com/LluisV/Z-Anatomy/blob/6c7f9016bd5899ac8edafd31b9900c151df42ed6/Resources/Models/FBX/VisceralSystem100.fbx"
+  },
+  {
+    "name": "NervousSystem100.fbx",
+    "bytes": 53887724,
+    "gitBlobSha": "4ec6e3cb2a1ba821aca02c1d523ac614fdf41a02",
+    "sha256": "3ea1aad64956cad27348a27b8fb50494b7cc307c6bc77bee0810ec2a67dff2b1",
+    "source": "https://github.com/LluisV/Z-Anatomy/blob/6c7f9016bd5899ac8edafd31b9900c151df42ed6/Resources/Models/FBX/NervousSystem100.fbx"
+  },
+  {
+    "name": "CardioVascular41.fbx",
+    "bytes": 64889388,
+    "gitBlobSha": "aa5bbcb63ae6e9ace8051111b3a85ea87f00c4f3",
+    "sha256": "ed7d049117cc944a8c47a416b16ade642cbd1392bbcce3c677450d3234dbf680",
+    "source": "https://github.com/LluisV/Z-Anatomy/blob/6c7f9016bd5899ac8edafd31b9900c151df42ed6/Resources/Models/FBX/CardioVascular41.fbx"
+  },
+  {
+    "name": "Joints100.fbx",
+    "bytes": 9804796,
+    "gitBlobSha": "9db06d20217f4f42999dcfdf31b1f6af78dc7794",
+    "sha256": "f4ba7a910cdaef99e31530f368628780d9f06b5d77853f8b721f47f67137e823",
+    "source": "https://github.com/LluisV/Z-Anatomy/blob/6c7f9016bd5899ac8edafd31b9900c151df42ed6/Resources/Models/FBX/Joints100.fbx"
+  },
+  {
+    "name": "LymphoidOrgans100.fbx",
+    "bytes": 2130876,
+    "gitBlobSha": "fa39c3f65ecbf7d97c3f56ba47b4382e957ef85e",
+    "sha256": "310ff82f502f4f3a79e85f99ddc2009bba9514338119af9edff87b20cf1b3609",
+    "source": "https://github.com/LluisV/Z-Anatomy/blob/6c7f9016bd5899ac8edafd31b9900c151df42ed6/Resources/Models/FBX/LymphoidOrgans100.fbx"
+  }
+]
