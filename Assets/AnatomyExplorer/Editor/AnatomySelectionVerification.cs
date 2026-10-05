@@ -37,15 +37,15 @@ namespace AnatomyExplorer.Editor
         }
         static void CheckRequest()
         {
+            EditorSceneManager.playModeStartScene=AssetDatabase.LoadAssetAtPath<SceneAsset>(AnatomySceneBuilder.ScenePath);
             var gameViewType=typeof(EditorWindow).Assembly.GetType("UnityEditor.GameView");
             if(gameViewType!=null)
             {
                 var flags=System.Reflection.BindingFlags.Instance|System.Reflection.BindingFlags.Public|System.Reflection.BindingFlags.NonPublic;
                 foreach(var window in Resources.FindObjectsOfTypeAll(gameViewType))
                 {
-                    gameViewType.GetProperty("lowResolutionForAspectRatios",flags)?.SetValue(window,false);
-                    var zoom=gameViewType.GetField("m_ZoomArea",flags)?.GetValue(window);
-                    zoom?.GetType().GetProperty("scale",flags)?.SetValue(zoom,Vector2.one);
+                    var lowResolution=gameViewType.GetProperty("lowResolutionForAspectRatios",flags);
+                    if(lowResolution!=null&&lowResolution.CanWrite)lowResolution.SetValue(window,false);
                     ((EditorWindow)window).Repaint();
                 }
             }

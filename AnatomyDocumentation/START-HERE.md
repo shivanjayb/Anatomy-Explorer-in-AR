@@ -5,6 +5,7 @@
 1. Open the existing project at `/Users/shiv/AR` in Unity 6000.6.3f1.
 2. Open `Assets/AnatomyExplorer/Scenes/AnatomyExplorer.unity`.
 3. Open the Game tab and press Play. Use a landscape Game view, ideally 1440 × 900 or 1920 × 1080. Maximize the Game tab if the controls appear small.
+   The editor sets AnatomyExplorer as the Play-mode start scene on project load and script reload, so Play launches the anatomy demo even if SampleScene was restored from your last session.
 4. The atlas starts with Muscles. Drag over the body to rotate it; scroll or use Zoom to examine it.
    Fascia surfaces are hidden initially to expose the muscle detail. Use Fascia on/off to restore them; selecting a fascia structure also reveals it.
 5. Choose Skeleton, Organs, Nerves, Blood vessels, Joints, or Lymphatic. All systems combines the imported layers.

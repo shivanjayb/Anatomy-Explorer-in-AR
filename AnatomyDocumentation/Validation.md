@@ -18,3 +18,8 @@ Integration log: `ANATOMY_INTEGRATION_PASS: initialization, layer exclusivity, c
 No native Android/Gradle or iOS/Xcode build was run. Both build modules were initially absent; after the user installed the iOS pack, Unity confirmed iOS build support = true. Android support remains absent. Camera mapping, live tracking, anatomical alignment, body motion, permissions, interruption recovery, and phone performance remain unverified.
 
 Unity discarded several self-intersecting polygons while importing the upstream meshes. The atlas has not undergone independent anatomical or clinical validation. Source file bytes are unchanged; the presentation scene filters annotation/composite/helper meshes and uses new display materials.
+# Play launch repair
+
+Unity restored SampleScene at startup. The anatomy scene is now registered as the editor Play-mode start scene on project load and script reload. Removed the preview helper's attempt to set the read-only Game view scale property, which caused `ArgumentException: Set Method not found for 'scale'`.
+
+After the repair, Unity's anatomy initialization and selection/UI checks passed (`ANATOMY_SELECTION_UI_PASS`), and the user confirmed Play works. Physical phone testing remains pending.
