@@ -26,22 +26,15 @@ namespace AnatomyExplorer
         public int SelectedLayer { get; private set; }
         public AnatomyPart SelectedPart { get; private set; }
         public int StructureCount => parts.Count;
-        public int QuizScore => quizScore;
-        public int QuizAttempts => quizAttempts;
         readonly List<AnatomyPart> parts = new List<AnatomyPart>();
         readonly Dictionary<AnatomyPart, Vector3> originalScales = new Dictionary<AnatomyPart, Vector3>();
-        TMP_Text statusText, countText, selectedTitle, selectedBody, modeText, quizText, pageText;
+        TMP_Text statusText, countText, selectedTitle, selectedBody, modeText, pageText;
         TMP_InputField search;
         RectTransform listContent;
         Button[] layerButtons;
         readonly List<GameObject> listItems = new List<GameObject>();
-        GameObject quizPanel;
-        Button[] answers;
-        AnatomyPart quizTarget;
-        int quizScore, quizAttempts;
         int currentPage, pageCount;
         const int PageSize=80;
-        bool quizAnswered;
         bool isolated, autoRotate, allSystems, showFascia;
         float yaw, zoom = 1f;
         Vector2 previousPointer;
@@ -294,11 +287,22 @@ namespace AnatomyExplorer
             var header=Panel(canvasGO.transform,"Header",new Vector2(0,1),new Vector2(1,1),new Vector2(0,-96),Vector2.zero,panel);
             Label(header,"ANATOMY / AR",30,accent,new Vector2(28,-14),new Vector2(350,40));
             modeText=Label(header,"",15,muted,new Vector2(30,-57),new Vector2(450,25));
-            ButtonAt(header,"Clear person",new Vector2(-990,-25),new Vector2(190,45),ClearPersonSelection,true);
-            ButtonAt(header,"Fascia on/off",new Vector2(-785,-25),new Vector2(175,45),ToggleFascia,true);
-            ButtonAt(header,"All systems",new Vector2(-598,-25),new Vector2(175,45),ShowAllSystems,true);
-            ButtonAt(header,"Atlas preview",new Vector2(-408,-25),new Vector2(170,45),()=>SetMode(false),true);
-            ButtonAt(header,"Live body overlay",new Vector2(-225,-25),new Vector2(200,45),()=>SetMode(true),true);
+            // Fixed pixel offsets from the right edge clipped off-canvas on narrow/portrait phone aspects
+            // (the real target device). A layout group shrinks buttons to fit instead of hiding them.
+            var actions=new GameObject("Header Actions",typeof(RectTransform),typeof(HorizontalLayoutGroup));
+            actions.transform.SetParent(header,false);
+            var actionsRect=actions.GetComponent<RectTransform>();
+            actionsRect.anchorMin=new Vector2(0,0);actionsRect.anchorMax=new Vector2(1,1);
+            actionsRect.offsetMin=new Vector2(390,8);actionsRect.offsetMax=new Vector2(-20,-8);
+            var actionsLayout=actions.GetComponent<HorizontalLayoutGroup>();
+            actionsLayout.childAlignment=TextAnchor.MiddleRight;actionsLayout.spacing=10;
+            actionsLayout.childForceExpandWidth=false;actionsLayout.childForceExpandHeight=true;
+            actionsLayout.childControlWidth=true;actionsLayout.childControlHeight=false;
+            ButtonAt(actions.transform,"Clear person",Vector2.zero,new Vector2(190,45),ClearPersonSelection);
+            ButtonAt(actions.transform,"Fascia on/off",Vector2.zero,new Vector2(175,45),ToggleFascia);
+            ButtonAt(actions.transform,"All systems",Vector2.zero,new Vector2(175,45),ShowAllSystems);
+            ButtonAt(actions.transform,"Atlas preview",Vector2.zero,new Vector2(170,45),()=>SetMode(false));
+            ButtonAt(actions.transform,"Live body overlay",Vector2.zero,new Vector2(200,45),()=>SetMode(true));
             var left=Panel(canvasGO.transform,"Systems",new Vector2(0,0),new Vector2(0,1),new Vector2(18,95),new Vector2(250,-114),panel);
             Label(left,"BODY SYSTEMS",17,muted,new Vector2(18,-20),new Vector2(220,28));
             layerButtons=new Button[layers.Length];
@@ -329,12 +333,6 @@ namespace AnatomyExplorer
             var bottom=Panel(canvasGO.transform,"Footer",Vector2.zero,new Vector2(1,0),Vector2.zero,new Vector2(0,78),panel);
             statusText=Label(bottom,"",15,muted,new Vector2(22,-13),new Vector2(990,27));
             Label(bottom,"Z-Anatomy / BodyParts3D  •  Educational atlas",12,muted,new Vector2(22,-44),new Vector2(800,23));
-            ButtonAt(bottom,"Practice quiz",new Vector2(-200,-15),new Vector2(175,47),StartQuiz,true);
-            quizPanel=Panel(canvasGO.transform,"Quiz",new Vector2(.5f,.5f),new Vector2(.5f,.5f),new Vector2(-280,-215),new Vector2(280,215),panel).gameObject;
-            quizText=Label(quizPanel.transform,"",22,Color.white,new Vector2(25,-20),new Vector2(510,85));
-            answers=new Button[4];for(int i=0;i<4;i++){int idx=i; answers[i]=ButtonAt(quizPanel.transform,"",new Vector2(25,-115-i*53),new Vector2(510,45),()=>Answer(idx));}
-            ButtonAt(quizPanel.transform,"Next",new Vector2(25,-355),new Vector2(245,45),NextQuestion);
-            ButtonAt(quizPanel.transform,"Close",new Vector2(285,-355),new Vector2(250,45),()=>quizPanel.SetActive(false));quizPanel.SetActive(false);
         }
         void RefreshList(bool resetPage=true)
         {
@@ -349,24 +347,6 @@ namespace AnatomyExplorer
             listContent.anchoredPosition=Vector2.zero;
             for(int i=0;i<filtered.Count;i++) {var p=filtered[i];var button=ButtonAt(listContent,p.displayName,new Vector2(3,-i*39),new Vector2(278,35),()=>SelectPart(p));button.GetComponentInChildren<TMP_Text>().fontSize=16;listItems.Add(button.gameObject);}
         }
-        public void StartQuiz(){if(isolated)ResetView();quizPanel.SetActive(true);NextQuestion();}
-        public void NextQuestion()
-        {
-            var pool=parts.Where(p=>allSystems||p.systemName==layerNames[SelectedLayer]).GroupBy(p=>p.displayName).Select(g=>g.First()).ToList();
-            if(pool.Count<4){quizText.text="Choose a layer with at least four structures.";return;}
-            quizAnswered=false;quizTarget=pool[UnityEngine.Random.Range(0,pool.Count)];SelectPart(quizTarget);
-            selectedTitle.text="Identify the highlighted structure"; selectedBody.text="Choose its name in the practice quiz.";
-            var choices=pool.Where(p=>p!=quizTarget).OrderBy(_=>UnityEngine.Random.value).Take(3).ToList();choices.Add(quizTarget);choices=choices.OrderBy(_=>UnityEngine.Random.value).ToList();
-            quizText.text="Name the teal structure\nScore: "+quizScore+" / "+quizAttempts;
-            for(int i=0;i<4;i++){answers[i].GetComponentInChildren<TMP_Text>().text=choices[i].displayName;answers[i].interactable=true;}
-        }
-        void Answer(int index)
-        {
-            if(quizAnswered||quizTarget==null)return;quizAnswered=true;quizAttempts++;
-            bool correct=answers[index].GetComponentInChildren<TMP_Text>().text==quizTarget.displayName;if(correct)quizScore++;
-            quizText.text=(correct?"Correct!":"Answer: "+quizTarget.displayName)+"\nScore: "+quizScore+" / "+quizAttempts;
-            foreach(var b in answers)b.interactable=false;SelectPart(quizTarget);
-        }
         RectTransform Panel(Transform parent,string name,Vector2 min,Vector2 max,Vector2 lower,Vector2 upper,Color color)
         {
             var go=new GameObject(name,typeof(RectTransform),typeof(Image));go.transform.SetParent(parent,false);var r=go.GetComponent<RectTransform>();r.anchorMin=min;r.anchorMax=max;r.offsetMin=lower;r.offsetMax=upper;go.GetComponent<Image>().color=color;return r;
@@ -376,11 +356,14 @@ namespace AnatomyExplorer
             var go=new GameObject("Text",typeof(RectTransform),typeof(TextMeshProUGUI));go.transform.SetParent(parent,false);var r=go.GetComponent<RectTransform>();r.anchorMin=r.anchorMax=new Vector2(0,1);r.pivot=new Vector2(0,1);r.anchoredPosition=position;r.sizeDelta=dimensions;
             var t=go.GetComponent<TextMeshProUGUI>();t.font=font;t.fontSize=Mathf.Max(18,size);t.color=color;t.text=text;t.raycastTarget=false;t.overflowMode=TextOverflowModes.Ellipsis;return t;
         }
-        Button ButtonAt(Transform parent,string text,Vector2 position,Vector2 dimensions,UnityEngine.Events.UnityAction action,bool right=false)
+        Button ButtonAt(Transform parent,string text,Vector2 position,Vector2 dimensions,UnityEngine.Events.UnityAction action)
         {
-            var go=new GameObject(text,typeof(RectTransform),typeof(Image),typeof(Button));go.transform.SetParent(parent,false);var r=go.GetComponent<RectTransform>();r.anchorMin=r.anchorMax=new Vector2(right?1:0,1);r.pivot=new Vector2(0,1);r.anchoredPosition=position;r.sizeDelta=dimensions;
+            var go=new GameObject(text,typeof(RectTransform),typeof(Image),typeof(Button));go.transform.SetParent(parent,false);var r=go.GetComponent<RectTransform>();r.anchorMin=r.anchorMax=new Vector2(0,1);r.pivot=new Vector2(0,1);r.anchoredPosition=position;r.sizeDelta=dimensions;
             go.GetComponent<Image>().color=new Color(.10f,.16f,.22f);var b=go.GetComponent<Button>();b.onClick.AddListener(action);
-            var label=Label(go.transform,text,16,Color.white,Vector2.zero,dimensions);label.alignment=TextAlignmentOptions.Center;return b;
+            var label=Label(go.transform,text,16,Color.white,Vector2.zero,dimensions);label.alignment=TextAlignmentOptions.Center;
+            var labelRect=label.GetComponent<RectTransform>();labelRect.anchorMin=Vector2.zero;labelRect.anchorMax=Vector2.one;labelRect.offsetMin=labelRect.offsetMax=Vector2.zero;
+            var layoutElement=go.AddComponent<LayoutElement>();layoutElement.preferredWidth=dimensions.x;layoutElement.preferredHeight=dimensions.y;layoutElement.minWidth=60;
+            return b;
         }
         TMP_InputField SearchField(Transform parent,Vector2 position,Vector2 size)
         {

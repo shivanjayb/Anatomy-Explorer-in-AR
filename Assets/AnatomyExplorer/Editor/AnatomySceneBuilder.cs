@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using UnityEditor;
@@ -36,17 +37,40 @@ namespace AnatomyExplorer.Editor
                 var layer=new GameObject(app.layerNames[i]);layer.transform.SetParent(anatomy.transform,false);app.layers[i]=layer;
                 var source=UnityEngine.Object.Instantiate(AssetDatabase.LoadAssetAtPath<GameObject>("Assets/AnatomyExplorer/Models/"+Files[i]+".fbx"));
                 var material=MakeMaterial(app.layerNames[i],Colors[i]);
-                foreach(var original in source.GetComponentsInChildren<MeshRenderer>())
+                var renderers=source.GetComponentsInChildren<MeshRenderer>();
+                var allNames=new HashSet<string>(renderers.Select(r=>r.name));
+                var usedDisplayNames=new HashSet<string>();
+                foreach(var original in renderers)
                 {
                     string n=original.name;
-                    if(n.EndsWith(".j")||n.EndsWith(".i")||n.StartsWith("Cross Section",StringComparison.OrdinalIgnoreCase)||n.Contains("-profile"))continue;
+                    if(n.StartsWith("Cross Section",StringComparison.OrdinalIgnoreCase)||n.Contains("-profile"))continue;
                     var filter=original.GetComponent<MeshFilter>();if(filter==null||filter.sharedMesh==null||filter.sharedMesh.vertexCount==0)continue;
+                    if(n.EndsWith(".j")||n.EndsWith(".i"))
+                    {
+                        // ".i"/".j" normally mark a duplicate annotation/helper copy of a structure that also
+                        // exists under its plain name — drop those. But a handful of real organs (Brain, Cerebrum,
+                        // the heart's surface patches, …) have NO plain-named sibling, so their ".i"/".j" copy is
+                        // the only copy; dropping it unconditionally silently deletes the whole organ.
+                        // However: some "sole copy" .i/.j meshes are themselves just a 24-vertex bounding-box
+                        // stub Z-Anatomy uses as a collapsed-group marker (Brain.j, Thymus.j, Pelvic girdle.j, …),
+                        // not real geometry — keeping those renders a flat floating box/line instead of an organ.
+                        bool hasPlainSibling=allNames.Contains(n.Substring(0,n.Length-2));
+                        bool isGroupMarkerStub=filter.sharedMesh.vertexCount==24;
+                        if(hasPlainSibling||isGroupMarkerStub)continue;
+                    }
                     var obj=new GameObject(n);obj.transform.SetParent(layer.transform,false);
                     obj.transform.SetPositionAndRotation(original.transform.position,original.transform.rotation);obj.transform.localScale=original.transform.lossyScale;
                     obj.AddComponent<MeshFilter>().sharedMesh=filter.sharedMesh;
                     var renderer=obj.AddComponent<MeshRenderer>();renderer.sharedMaterial=material;renderer.shadowCastingMode=UnityEngine.Rendering.ShadowCastingMode.Off;
+                    // A handful of source names are corrupted to literal "?" characters (encoding loss in the
+                    // upstream export). Fall back to the parent's name rather than show "????????" in the UI.
+                    string nameSource=n.Contains("?")&&original.transform.parent!=null?original.transform.parent.name:n;
+                    string readableName=Readable(nameSource);
+                    // A sole-surviving ".i"+".j" pair (two overlapping patches of one landmark), or a garbled
+                    // name that fell back to its parent's name, renders fully but becomes one selectable entry.
+                    if(!usedDisplayNames.Add(readableName))continue;
                     var collider=obj.AddComponent<MeshCollider>();collider.sharedMesh=filter.sharedMesh;
-                    var part=obj.AddComponent<AnatomyPart>();part.displayName=Readable(n);part.systemName=app.layerNames[i];part.meshRenderer=renderer;part.originalMaterial=material;
+                    var part=obj.AddComponent<AnatomyPart>();part.displayName=readableName;part.systemName=app.layerNames[i];part.meshRenderer=renderer;part.originalMaterial=material;
                     // Flatten model hierarchy while retaining source geometry and anatomical coordinates.
                     part.restPosition=obj.transform.localPosition;part.restRotation=obj.transform.localRotation;part.segment=Segment(renderer.bounds.center,n,i);
                     total++;
@@ -77,8 +101,8 @@ namespace AnatomyExplorer.Editor
             RenderSettings.ambientMode=UnityEngine.Rendering.AmbientMode.Flat;RenderSettings.ambientLight=new Color(.42f,.46f,.51f);
             // Keep the editor demonstration deterministic and independent of camera permissions.
             session.SetActive(false);cameraManager.enabled=false;cameraGO.GetComponent<ARCameraBackground>().enabled=false;driver.enabled=false;bodies.enabled=false;
-            PlayerSettings.companyName="College Project";PlayerSettings.productName="Anatomy Explorer AR";
-            PlayerSettings.SetApplicationIdentifier(UnityEditor.Build.NamedBuildTarget.Android,"com.college.anatomyexplorer");PlayerSettings.SetApplicationIdentifier(UnityEditor.Build.NamedBuildTarget.iOS,"com.college.anatomyexplorer");
+            PlayerSettings.companyName="Anatomy Explorer";PlayerSettings.productName="Anatomy Explorer AR";
+            PlayerSettings.SetApplicationIdentifier(UnityEditor.Build.NamedBuildTarget.Android,"com.anatomyexplorer.app");PlayerSettings.SetApplicationIdentifier(UnityEditor.Build.NamedBuildTarget.iOS,"com.anatomyexplorer.app");
             PlayerSettings.defaultInterfaceOrientation=UIOrientation.LandscapeLeft;
             PlayerSettings.Android.minSdkVersion=AndroidSdkVersions.AndroidApiLevel26;
             PlayerSettings.iOS.targetOSVersionString="14.0";PlayerSettings.iOS.cameraUsageDescription="The rear camera detects a person for the educational anatomy overlay.";
@@ -98,9 +122,31 @@ namespace AnatomyExplorer.Editor
         }
         static string Readable(string n)
         {
-            if(n.EndsWith(".l"))return n.Substring(0,n.Length-2)+" (left)";
-            if(n.EndsWith(".r"))return n.Substring(0,n.Length-2)+" (right)";
-            return n.Replace("_"," ");
+            // Z-Anatomy suffix codes: plain .l/.r for side, or a variant marker (e/o, optionally numbered)
+            // before the side letter (.e1l, .o2r, …), or a bare .i/.j with no side meaning at all.
+            string suffix=null;
+            int dot=n.LastIndexOf('.');
+            if(dot>0&&dot<n.Length-1)
+            {
+                string code=n.Substring(dot+1);
+                char last=code[code.Length-1];
+                if(last=='i'||last=='j')
+                {
+                    n=n.Substring(0,dot);
+                }
+                else if(last=='l'||last=='r')
+                {
+                    string marker=code.Substring(0,code.Length-1);
+                    if(marker.Length<=3&&marker.All(c=>c=='e'||c=='o'||char.IsDigit(c)))
+                    {
+                        suffix=last=='l'?" (left)":" (right)";
+                        n=n.Substring(0,dot);
+                    }
+                }
+            }
+            if(n.StartsWith("(")&&n.EndsWith(")"))n=n.Substring(1,n.Length-2);
+            n=n.Replace("_"," ");
+            return suffix!=null?n+suffix:n;
         }
         static int Segment(Vector3 p,string name,int layer)
         {

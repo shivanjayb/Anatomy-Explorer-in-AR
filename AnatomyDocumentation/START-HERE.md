@@ -1,4 +1,4 @@
-# Anatomy Explorer AR — college demonstration
+# Anatomy Explorer AR — demonstration build
 
 ## Present it today in Unity
 
@@ -10,13 +10,12 @@
    Fascia surfaces are hidden initially to expose the muscle detail. Use Fascia on/off to restore them; selecting a fascia structure also reveals it.
 5. Choose Skeleton, Organs, Nerves, Blood vessels, Joints, or Lymphatic. All systems combines the imported layers.
 6. Search for a structure, select its name, then use Isolate and Reset. Use the arrows to browse additional pages.
-7. Practice quiz highlights a structure and offers four names. Next generates another question.
 
-The atlas has 3,618 selectable source structures: 683 in the muscular atlas, 982 skeletal, 118 visceral, 582 nervous, 676 cardiovascular, 413 joint/connective, and 164 lymphatic. These are source atlas structures, not a claim of 3,618 distinct organs or complete coverage of every anatomical structure. The muscular atlas includes associated tendons and bursae. Heart structures are in Blood vessels and brain structures are in Nerves. All systems displays them together.
+The atlas has 3,250 selectable source structures: 683 in the muscular atlas, 612 skeletal, 121 visceral, 584 nervous, 673 cardiovascular, 413 joint/connective, and 164 lymphatic. These are source atlas structures, not a claim of 3,250 distinct organs or complete coverage of every anatomical structure. The muscular atlas includes associated tendons and bursae. The source model has no single whole-brain or whole-cerebrum mesh — only its substructures (midbrain, cerebellum parts, corpus callosum, …) are present under Nerves — and no whole heart-muscle mesh either, only the coronary vessels around it under Blood vessels. Neither organ is modeled as one selectable whole. All systems displays them together.
 
 ## Problem statement
 
-Students studying anatomy from flat diagrams can find it difficult to understand the spatial relationships among muscles, bones, and internal organs. Anatomy Explorer provides an interactive 3D atlas and a mobile rear-camera body-overlay prototype, enabling users to examine anatomical layers, identify named structures, and practise recognition with quizzes.
+Students studying anatomy from flat diagrams can find it difficult to understand the spatial relationships among muscles, bones, and internal organs. Anatomy Explorer provides an interactive 3D atlas and a mobile rear-camera body-overlay prototype, enabling users to examine anatomical layers and identify named structures.
 
 ## What is verified
 
@@ -25,7 +24,7 @@ Students studying anatomy from flat diagrams can find it difficult to understand
 - Full-body atlas framing visually inspected using a real Unity screenshot.
 - Imported model file hashes verified against the upstream GitHub catalog.
 
-See `Validation.md` for the final checks. Quiz scoring and tracking checks must be described according to those recorded results.
+See `Validation.md` for the final checks. Tracking checks must be described according to those recorded results.
 
 ## Mobile rear-camera overlay
 

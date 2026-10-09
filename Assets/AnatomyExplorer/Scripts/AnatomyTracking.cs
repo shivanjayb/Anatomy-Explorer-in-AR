@@ -129,8 +129,11 @@ namespace AnatomyExplorer
             float span = Mathf.Abs(uv[0].y - (uv[11].y + uv[12].y) * .5f);
             float depth = Mathf.Clamp(assumedHeight / (2 * Mathf.Tan(viewCamera.fieldOfView * Mathf.Deg2Rad * .5f) * Mathf.Max(.1f, span)), .7f, 8f);
             for (int i = 0; i < 13; i++) Pose.points[i] = viewCamera.ViewportToWorldPoint(new Vector3(uv[i].x, uv[i].y, depth));
+            // ML Kit has no person identity, so a reacquisition after any gap must count as a new subject —
+            // otherwise a different person stepping in after a tracking gap silently inherits the old selection.
+            bool reacquired = !Pose.valid || Pose.subjectId == null;
             Pose.valid = true; Pose.receivedAt = Time.unscaledTime; Pose.provider = "ML Kit 2D pose + estimated depth";
-            Pose.subjectId = "single-person";
+            if (reacquired) Pose.subjectId = Guid.NewGuid().ToString();
             Status = "Android: person tracked • approximate depth";
         }
 #endif

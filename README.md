@@ -7,7 +7,7 @@ Unity college anatomy project with an interactive 3D atlas and a mobile rear-cam
 1. Open this repository in Unity **6000.6.3f1**.
 2. Open `Assets/AnatomyExplorer/Scenes/AnatomyExplorer.unity` and press Play.
 3. Choose Muscles, Skeleton, Organs, Nerves, Blood vessels, Joints, or Lymphatic.
-4. Search and select structures, isolate them, or practise with the quiz.
+4. Search and select structures, then isolate them for a closer look.
 
 For a sharp editor preview, disable **Low Resolution Aspect Ratios** in the Game view's aspect dropdown and use **1x** scale.
 
@@ -23,6 +23,6 @@ See [setup and demo instructions](AnatomyDocumentation/START-HERE.md), [selectio
 
 ## Models and credits
 
-The atlas contains 3,618 selectable source structures from Z-Anatomy / BodyParts3D. Downloaded FBX sources are included with their Unity metadata.
+The atlas contains 3,250 selectable source structures from Z-Anatomy / BodyParts3D. Downloaded FBX sources are included with their Unity metadata.
 
 See [required attribution and asset license conditions](Assets/AnatomyExplorer/Models/ATTRIBUTION.md) and [source provenance](AnatomyDocumentation/Model-Provenance.json). Some components have noncommercial licenses; retain the credits and applicable ShareAlike terms.
